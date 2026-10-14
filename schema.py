@@ -160,6 +160,16 @@ class TriageDecision(BaseModel):
     )
     action: ActionEnum = Field(..., description="Recommended disposition of the alert.")
 
+    @field_validator("confidence", mode="before")
+    @classmethod
+    def _normalize_confidence(cls, v: Any) -> float:
+        try:
+            val = float(v)
+        except (ValueError, TypeError):
+            raise ValueError(f"confidence must be numeric, got {v!r}")
+        if 1.0 < val <= 100.0:
+            return val / 100.0
+        return val
 
 def triage_json_schema(field_order: Literal["reasoning-first", "verdict-first"] = "reasoning-first") -> dict[str, Any]:
     """JSON Schema for TriageDecision, optionally with re-ordered properties.
